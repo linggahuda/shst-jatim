@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%">
+  <!-- Circular Blue Background -->
+  <circle cx="500" cy="500" r="500" fill="#0066FF" />
+
+  <defs>
+    <!-- Left Tower Shape -->
+    <g id="tower-half">
+      <!-- Main White Tower Silhouette -->
+      <polygon fill="#FFFFFF" points="
+        426,148
+        356,148 356,170
+        338,170 338,222
+        320,222 320,274
+        284,274 284,328
+        268,328 268,346
+        250,396 250,448
+        270,448 270,464
+        286,464 286,500
+        330,500 330,552
+        250,552 250,624
+        226,624 226,692
+        182,692 182,808
+        426,808
+      " />
+
+      <!-- Upper Cutout Slits (Blue) -->
+      <rect x="308" y="222" width="84" height="14" fill="#0066FF" />
+      <rect x="292" y="270" width="100" height="16" fill="#0066FF" />
+      <rect x="276" y="324" width="110" height="20" fill="#0066FF" />
+
+      <!-- Center Waist Cutout (Connected to center gap) -->
+      <rect x="368" y="444" width="59" height="24" fill="#0066FF" />
+
+      <!-- Lower Stepped Channel (Blue) -->
+      <polygon fill="#0066FF" points="
+        286,574 366,574 366,762 226,762 226,744 346,744 346,594 286,594
+      " />
+
+      <!-- Outer Foot Cutout (Blue) -->
+      <rect x="202" y="692" width="24" height="56" fill="#0066FF" />
+    </g>
+  </defs>
+
+  <!-- Render Left Half -->
+  <use href="#tower-half" />
+
+  <!-- Render Right Half (Mirrored across X=500) -->
+  <use href="#tower-half" transform="translate(1000, 0) scale(-1, 1)" />
+</svg>

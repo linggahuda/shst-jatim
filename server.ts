@@ -13,6 +13,9 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // Serve static files from public directory (logos, favicons, pdfs)
+  app.use(express.static(path.join(process.cwd(), "public")));
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");

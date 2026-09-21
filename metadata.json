@@ -1,5 +1,5 @@
 {
-  "name": "Informasi SHST Jawa Timur",
+  "name": "Portal Informasi SHST Provinsi Jawa Timur",
   "description": "Website sederhana untuk menampilkan data Standar Harga Satuan Tertinggi (SHST) Kabupaten/Kota di Jawa Timur beserta peninjau dokumen PDF.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

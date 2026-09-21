@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Map, User, Search, Table } from 'lucide-react';
+import { User, Search, Table } from 'lucide-react';
 import { SHSTRecord } from './types';
 import { INITIAL_SHST_DATA } from './data/shstData';
 import RegionSelector from './components/RegionSelector';
@@ -12,6 +12,7 @@ import AdminPanel from './components/AdminPanel';
 export default function App() {
   // Clear any residual dark mode on layout mount to enforce light mode
   useEffect(() => {
+    document.title = "Portal Informasi SHST Provinsi Jawa Timur";
     document.documentElement.classList.remove('dark');
     localStorage.removeItem('shst_dark_mode');
   }, []);
@@ -52,9 +53,13 @@ export default function App() {
           
           {/* Logo & Emblems */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#0d6efd] text-white rounded flex items-center justify-center shadow-sm shrink-0">
-              <Map className="w-6 h-6" />
-            </div>
+            <img 
+              src="/logo.svg" 
+              alt="Logo SHST Jawa Timur" 
+              className="w-12 h-12 rounded-full shadow-sm shrink-0 object-contain hover:scale-105 transition-transform"
+              id="website-logo"
+              referrerPolicy="no-referrer"
+            />
             <div>
               <h1 className="text-lg md:text-2xl font-bold text-[#212529] font-sans">
                 Portal Informasi SHST Kabupaten dan Kota di Jawa Timur
@@ -235,7 +240,23 @@ export default function App() {
         </section>
  
       </main>
- 
+
+      {/* Footer with Logo */}
+      <footer className="mt-16 border-t border-[#dee2e6] bg-white py-8 px-4 text-center">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 font-sans">
+          <div className="flex items-center gap-3">
+            <img 
+              src="/logo.svg" 
+              alt="Logo SHST Jawa Timur" 
+              className="w-7 h-7 rounded-full object-contain" 
+              referrerPolicy="no-referrer"
+            />
+            <span className="font-semibold text-slate-700">Portal Informasi SHST Jawa Timur</span>
+          </div>
+          <p>© {new Date().getFullYear()} Standar Harga Satuan Tertinggi - Pemerintah Provinsi Jawa Timur</p>
+        </div>
+      </footer>
+
       {showAdminPanel && (
         <AdminPanel
           onClose={() => setShowAdminPanel(false)}
