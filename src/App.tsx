@@ -77,7 +77,7 @@ export default function App() {
           {/* Logo & Portal Title */}
           <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto min-w-0">
             <img 
-              src="/logo-dprkpck.png" 
+              src="./logo-dprkpck.png" 
               alt="Logo DPRKPCK Provinsi Jawa Timur" 
               className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 shrink-0 object-contain"
               id="website-logo"
@@ -286,7 +286,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500 font-sans">
           <div className="flex items-center gap-3 text-left">
             <img 
-              src="/logo-jatim.svg" 
+              src="./logo-jatim.svg" 
               alt="Lambang Provinsi Jawa Timur" 
               className="h-9 w-auto object-contain shrink-0" 
               referrerPolicy="no-referrer"
