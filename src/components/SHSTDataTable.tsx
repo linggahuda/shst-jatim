@@ -111,7 +111,7 @@ export default function SHSTDataTable({
                 rowSpan={2} 
                 className="px-4 py-3 border-r border-[#dee2e6] text-center bg-[#f8f9fa] font-bold font-sans text-[14px] text-black sticky top-0 z-20 shadow-xs"
               >
-                Nomor Dokumen
+                Sumber Data
               </th>
               <th 
                 rowSpan={2} 

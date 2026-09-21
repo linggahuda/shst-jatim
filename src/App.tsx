@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { User, Search, Table } from 'lucide-react';
+import { User, Search, Table, FileText } from 'lucide-react';
 import { SHSTRecord } from './types';
-import { INITIAL_SHST_DATA } from './data/shstData';
+import { INITIAL_SHST_DATA, GOOGLE_DRIVE_PDF_MAP } from './data/shstData';
 import RegionSelector from './components/RegionSelector';
 import SHSTTable from './components/SHSTTable';
 import SHSTDataTable from './components/SHSTDataTable';
@@ -10,71 +10,102 @@ import PDFViewer from './components/PDFViewer';
 import AdminPanel from './components/AdminPanel';
 
 export default function App() {
-  // Clear any residual dark mode on layout mount to enforce light mode
+  // Clear any residual dark mode or stored region on layout mount to enforce light mode and blank initial state
   useEffect(() => {
-    document.title = "Portal Informasi SHST Provinsi Jawa Timur";
+    document.title = "Portal Informasi SHST Kabupaten/Kota Provinsi Jawa Timur";
     document.documentElement.classList.remove('dark');
     localStorage.removeItem('shst_dark_mode');
+    localStorage.removeItem('shst_selected_region');
   }, []);
 
   // Application State
   const [records] = useState<SHSTRecord[]>(() => {
-    const saved = localStorage.getItem('shst_records');
-    return saved ? JSON.parse(saved) : INITIAL_SHST_DATA;
+    const saved = localStorage.getItem('shst_records_v2');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((r: SHSTRecord) => ({
+          ...r,
+          pdfUrl: GOOGLE_DRIVE_PDF_MAP[r.kabKota] || r.pdfUrl || undefined
+        }));
+      } catch {
+        return INITIAL_SHST_DATA;
+      }
+    }
+    return INITIAL_SHST_DATA;
   });
 
-  const [selectedRegion, setSelectedRegion] = useState<string>(() => {
-    return localStorage.getItem('shst_selected_region') || "Kabupaten Bangkalan";
-  });
+  // Always blank on initial access or page refresh waiting for user input
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
 
   // View mode state: 'search' (detail card layout) or 'table' (spreadsheet table layout)
   const [viewMode, setViewMode] = useState<'search' | 'table'>('search');
   
-  // Real-time keyword filter for the table mode search bar
+  // Real-time keyword filter for the table mode search bar - always blank on initial load/refresh
   const [tableSearchQuery, setTableSearchQuery] = useState<string>('');
 
   const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false);
 
-  const lastUpdated = localStorage.getItem('shst_last_updated') || "27 Maret 2026";
+  // Scroll detection for sticky header fade animation
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
 
   useEffect(() => {
-    localStorage.setItem('shst_selected_region', selectedRegion);
-  }, [selectedRegion]);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const lastUpdated = localStorage.getItem('shst_last_updated') || "27 Maret 2026";
 
   // Find the selected record
-  const selectedRecord = records.find(r => r.kabKota === selectedRegion);
+  const selectedRecord = selectedRegion ? records.find(r => r.kabKota === selectedRegion) : undefined;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#212529] font-sans pb-20">
+    <div className="min-h-screen flex flex-col bg-[#f8f9fa] text-[#212529] font-sans antialiased">
       
-      {/* Premium Bootstrap Header / Navbar */}
-      <header className="bg-white border-b border-[#dee2e6] py-5 px-4 md:px-8 shadow-sm" id="main-header">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* Sticky Header with Fade-out Controls on Scroll */}
+      <header 
+        className={`sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#dee2e6] transition-all duration-300 ${
+          isScrolled ? 'py-2.5 sm:py-3 shadow-sm' : 'py-3 sm:py-4 md:py-5 shadow-xs'
+        }`} 
+        id="main-header"
+      >
+        <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
           
-          {/* Logo & Emblems */}
-          <div className="flex items-center gap-4">
+          {/* Logo & Portal Title */}
+          <div className="flex items-center gap-3 md:gap-4 w-full sm:w-auto min-w-0">
             <img 
-              src="/logo.svg" 
-              alt="Logo SHST Jawa Timur" 
-              className="w-12 h-12 rounded-full shadow-sm shrink-0 object-contain hover:scale-105 transition-transform"
+              src="/logo-dprkpck.png" 
+              alt="Logo DPRKPCK Provinsi Jawa Timur" 
+              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 shrink-0 object-contain"
               id="website-logo"
               referrerPolicy="no-referrer"
             />
-            <div>
-              <h1 className="text-lg md:text-2xl font-bold text-[#212529] font-sans">
-                Portal Informasi SHST Kabupaten dan Kota di Jawa Timur
+            <div className="min-w-0 flex-1 text-left">
+              <h1 className="font-bold text-[#212529] font-sans tracking-tight text-sm sm:text-base md:text-xl leading-snug">
+                Portal Informasi SHST Kabupaten/Kota Provinsi Jawa Timur
               </h1>
-              <div className="flex items-center gap-2 mt-1 bg-[#e7f1ff] border border-[#b6d4fe] px-2.5 py-1 rounded shadow-xs text-[#084298] text-xs font-semibold font-sans w-fit" id="box-update-terakhir">
-                <div className="w-1.5 h-1.5 bg-[#0d6efd] rounded-full animate-pulse shrink-0"></div>
-                <span>Update Terakhir: <strong className="font-bold text-[#0d6efd]">{lastUpdated}</strong></span>
+              <div className="flex items-center gap-2 mt-1" id="box-update-terakhir-container">
+                <div className="flex items-center gap-1.5 bg-[#e7f1ff] border border-[#b6d4fe] px-2 py-0.5 rounded shadow-2xs text-[#084298] text-[10px] sm:text-[11px] font-semibold font-sans w-fit" id="box-update-terakhir">
+                  <div className="w-1.5 h-1.5 bg-[#0d6efd] rounded-full animate-pulse shrink-0"></div>
+                  <span>Update Terakhir: <strong className="font-bold text-[#0d6efd]">{lastUpdated}</strong></span>
+                </div>
               </div>
             </div>
           </div>
  
-          {/* Actions Container */}
-          <div className="flex items-center gap-3.5 shrink-0 flex-wrap justify-center">
+          {/* Action Controls (Centered on mobile, right-aligned on desktop, hides cleanly when scrolled) */}
+          <div 
+            className={`flex items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto shrink-0 transition-all duration-300 ease-in-out ${
+              isScrolled 
+                ? 'opacity-0 pointer-events-none -translate-y-2 scale-95 h-0 overflow-hidden m-0' 
+                : 'opacity-100 pointer-events-auto translate-y-0 scale-100'
+            }`}
+          >
             {/* View Mode Switcher Toggles (Left of Admin) */}
-            <div className="inline-flex rounded bg-slate-100 p-1 border border-slate-200" id="view-mode-toggle-group">
+            <div className="inline-flex rounded bg-slate-100 p-1 border border-slate-200 shadow-2xs" id="view-mode-toggle-group">
               <button
                 onClick={() => setViewMode('search')}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold font-sans transition-all cursor-pointer ${
@@ -103,7 +134,7 @@ export default function App() {
               </button>
             </div>
 
-            {/* Admin Portal Button with User Symbol (Smaller size as requested) */}
+            {/* Admin Portal Button */}
             <button
               onClick={() => setShowAdminPanel(true)}
               className="inline-flex items-center gap-1.5 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded shadow-xs hover:shadow-sm transition-all text-xs font-semibold cursor-pointer font-sans border border-transparent"
@@ -117,7 +148,7 @@ export default function App() {
       </header>
  
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 py-6 space-y-6">
         
         {/* SECTION 1: SELECTION AND REGION DROPDOWN (ONLY RENDER IN SEARCH VIEW MODE) */}
         {viewMode === 'search' && (
@@ -125,7 +156,7 @@ export default function App() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="bg-white border border-[#dee2e6] rounded shadow-sm p-5 md:p-6 overflow-visible" 
+            className="bg-white border border-[#dee2e6] rounded shadow-xs p-5 md:p-6 overflow-visible" 
             id="section-selection"
           >
             <RegionSelector 
@@ -149,7 +180,7 @@ export default function App() {
             {/* Search and Legend side for Table View */}
             {viewMode === 'table' && (
               <div className="flex flex-wrap items-center gap-4 md:gap-6 animate-in fade-in slide-in-from-top-1 duration-150">
-                {/* Legend items as requested (Data Tersedia, Data Belum Tersedia, Aktif) */}
+                {/* Legend items */}
                 <div className="flex flex-wrap items-center gap-4 text-[11px] font-semibold text-slate-600 font-sans">
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded bg-white border border-[#dee2e6] inline-block"></span>
@@ -165,13 +196,13 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Search input bar */}
+                {/* Search input bar with placeholder "Cari" */}
                 <div className="relative w-full md:w-56">
                   <input
                     type="text"
                     value={tableSearchQuery}
                     onChange={(e) => setTableSearchQuery(e.target.value)}
-                    placeholder="Cari Kab/Kota"
+                    placeholder="Cari"
                     className="w-full pl-9 pr-4 py-1.5 bg-white border border-[#dee2e6] rounded text-xs font-sans font-medium text-[#212529] focus:outline-hidden focus:ring-1 focus:ring-[#0d6efd] focus:border-[#0d6efd] placeholder:text-[#6c757d]"
                     id="table-search-input"
                   />
@@ -209,7 +240,7 @@ export default function App() {
           )}
         </section>
  
-        {/* SECTION 3: PDF EMBED VIEWER (DIRECT SHOW) */}
+        {/* SECTION 3: PDF EMBED VIEWER */}
         <section id="section-pdf-viewer" className="space-y-3">
           <div className="flex items-center justify-between border-b border-[#dee2e6] pb-2">
             <div className="flex items-center gap-2">
@@ -229,31 +260,49 @@ export default function App() {
             >
               <PDFViewer 
                 regionName={selectedRegion} 
-                configuredPdfUrl={selectedRecord.pdfUrl || `/pdf/shst_sample_1.pdf`}
+                configuredPdfUrl={selectedRecord.pdfUrl}
+                isAvailable={Boolean(selectedRecord.pdfUrl && selectedRecord.gedungTidakSederhana > 0)}
               />
             </motion.div>
           ) : (
-            <div className="bg-[#f8f9fa] border border-[#dee2e6] rounded p-6 text-center text-[#6c757d] text-sm font-sans">
-              Pilih wilayah untuk melihat lampiran PDF
+            <div className="bg-white border border-[#dee2e6] rounded p-8 text-center shadow-xs min-h-[220px] flex flex-col items-center justify-center" id="lampiran-empty-state">
+              <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-3 border border-slate-200">
+                <FileText className="w-6 h-6" />
+              </div>
+              <h4 className="text-base font-bold text-slate-700 font-sans mb-1">
+                Data Belum Dipilih
+              </h4>
+              <p className="text-sm text-slate-500 font-sans max-w-md">
+                Silakan pilih Kabupaten atau Kota.
+              </p>
             </div>
           )}
         </section>
  
       </main>
 
-      {/* Footer with Logo */}
-      <footer className="mt-16 border-t border-[#dee2e6] bg-white py-8 px-4 text-center">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 font-sans">
-          <div className="flex items-center gap-3">
+      {/* Solid Footer firmly anchored to bottom */}
+      <footer className="mt-auto border-t border-[#dee2e6] bg-white py-5 px-4 w-full" id="main-footer">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500 font-sans">
+          <div className="flex items-center gap-3 text-left">
             <img 
-              src="/logo.svg" 
-              alt="Logo SHST Jawa Timur" 
-              className="w-7 h-7 rounded-full object-contain" 
+              src="/logo-jatim.svg" 
+              alt="Lambang Provinsi Jawa Timur" 
+              className="h-9 w-auto object-contain shrink-0" 
               referrerPolicy="no-referrer"
             />
-            <span className="font-semibold text-slate-700">Portal Informasi SHST Jawa Timur</span>
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-700 text-xs sm:text-sm leading-snug">
+                Dinas Perumahan Rakyat, Kawasan Permukiman dan Cipta Karya
+              </span>
+              <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-snug">
+                Pemerintah Provinsi Jawa Timur
+              </span>
+            </div>
           </div>
-          <p>© {new Date().getFullYear()} Standar Harga Satuan Tertinggi - Pemerintah Provinsi Jawa Timur</p>
+          <p className="text-xs sm:text-sm text-slate-600 font-sans text-center md:text-right">
+            © 2026 TabaJakon Devs
+          </p>
         </div>
       </footer>
 

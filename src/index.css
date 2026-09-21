@@ -6,6 +6,13 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+html, body, #root {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+}
+
 /* Custom fine-grain animations for smooth dark theme transitions */
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }

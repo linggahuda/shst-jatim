@@ -16,7 +16,7 @@ export default function SHSTTable({ record }: SHSTTableProps) {
           </div>
           <h4 className="text-base font-bold text-[#212529] mb-1 font-sans">Data Belum Dipilih</h4>
           <p className="text-sm text-[#6c757d] font-sans">
-            Silakan pilih Kabupaten atau Kota dari menu pencarian di atas untuk memuat data SHST.
+            Silakan pilih Kabupaten atau Kota.
           </p>
         </div>
       </div>
@@ -98,7 +98,7 @@ export default function SHSTTable({ record }: SHSTTableProps) {
         {/* Unified Metadata (Nomor Dokumen, Tanggal Ditetapkan, Tahun Anggaran) */}
         <div className="flex flex-col md:flex-row gap-6 bg-[#f8f9fa] border border-[#dee2e6] p-4 rounded w-full lg:w-auto lg:ml-auto shrink-0">
           <div className="flex-1 min-w-0 md:max-w-md lg:max-w-lg space-y-0.5">
-            <span className="block text-[11px] font-bold text-[#6c757d] uppercase tracking-wider font-sans">Nomor Dokumen</span>
+            <span className="block text-[11px] font-bold text-[#6c757d] uppercase tracking-wider font-sans">SUMBER DATA</span>
             <span className="text-sm font-semibold text-[#212529] leading-relaxed font-sans block break-words" title={record.nomorDokumen || '-'}>
               {record.nomorDokumen || '-'}
             </span>

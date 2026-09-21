@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Check, MapPin, Building, Globe } from 'lucide-react';
+import { Search, ChevronDown, Check, MapPin, Building, Globe, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface RegionSelectorProps {
@@ -16,6 +16,7 @@ export default function RegionSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Filter regions based on search query
   const filteredRegions = regions.filter((region) =>
@@ -31,6 +32,7 @@ export default function RegionSelector({
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setSearchQuery('');
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -43,39 +45,13 @@ export default function RegionSelector({
     setIsOpen(false);
   };
 
-  // Find best matching region for autocomplete suggestion
-  let bestMatch = '';
-  let ghostSuffix = '';
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelectRegion('');
+    setSearchQuery('');
+  };
 
-  if (searchQuery.trim().length > 0) {
-    const queryLower = searchQuery.toLowerCase();
-    
-    // 1. Try full prefix match
-    const fullPrefixMatch = regions.find(r => r.toLowerCase().startsWith(queryLower));
-    if (fullPrefixMatch) {
-      bestMatch = fullPrefixMatch;
-      ghostSuffix = fullPrefixMatch.slice(searchQuery.length);
-    } else {
-      // 2. Try stripped prefix match (excluding "Kabupaten " or "Kota ")
-      const strippedPrefixMatch = regions.find(r => {
-        const stripped = r.replace(/^(kabupaten|kota)\s+/i, '');
-        return stripped.toLowerCase().startsWith(queryLower);
-      });
-      if (strippedPrefixMatch) {
-        bestMatch = strippedPrefixMatch;
-        const stripped = strippedPrefixMatch.replace(/^(kabupaten|kota)\s+/i, '');
-        ghostSuffix = stripped.slice(searchQuery.length);
-      } else {
-        // 3. Try contains match
-        const containsMatch = regions.find(r => r.toLowerCase().includes(queryLower));
-        if (containsMatch) {
-          bestMatch = containsMatch;
-          const index = containsMatch.toLowerCase().indexOf(queryLower);
-          ghostSuffix = containsMatch.slice(index + searchQuery.length);
-        }
-      }
-    }
-  }
+  const displayValue = isOpen ? searchQuery : (selectedRegion || '');
 
   return (
     <div className="relative w-full max-w-xl mx-auto z-30" ref={containerRef} id="region-selector-container">
@@ -86,59 +62,57 @@ export default function RegionSelector({
       
       {/* Search Input Box emulating Bootstrap .form-control */}
       <div 
-         className={`relative flex items-center bg-white border rounded transition-all duration-150 cursor-pointer ${
+        className={`relative flex items-center bg-white border rounded transition-all duration-150 cursor-pointer ${
           isOpen 
-            ? 'border-[#86b7fe] ring-4 ring-[#0d6efd]/25 shadow-sm' 
+            ? 'border-[#86b7fe] ring-4 ring-[#0d6efd]/25 shadow-xs' 
             : 'border-[#ced4da] hover:border-[#adb5bd]'
         }`}
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          inputRef.current?.focus();
+        }}
       >
         <div className="pl-3 text-[#6c757d] shrink-0">
           <Search className="w-4 h-4" />
         </div>
 
-        <div className="relative flex-1 flex items-center min-w-0">
-          {/* Ghost Text Overlay */}
-          {searchQuery.trim().length > 0 && ghostSuffix && (
-            <div className="absolute left-0 right-10 py-2.5 pl-2 text-base font-medium font-sans pointer-events-none flex select-none items-center leading-normal">
-              {/* Invisible matching portion to push the suggestion text */}
-              <span className="text-transparent whitespace-pre">{searchQuery}</span>
-              {/* Gray autocomplete shadow */}
-              <span className="text-[#adb5bd] whitespace-pre">{ghostSuffix}</span>
-            </div>
-          )}
-
-          <input
-            type="text"
-            className="w-full pl-2 pr-10 py-2.5 bg-transparent border-none text-[#212529] text-base font-medium placeholder-[#6c757d] focus:outline-none z-10 leading-normal"
-            placeholder={selectedRegion || "Cari Kabupaten atau Kota..."}
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setIsOpen(true);
-            }}
-            onFocus={() => setIsOpen(true)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                if (bestMatch) {
-                  handleSelect(bestMatch);
-                }
-              } else if (e.key === 'Tab' && bestMatch) {
-                e.preventDefault();
-                // Set the query to full bestMatch
-                setSearchQuery(bestMatch);
-              } else if (e.key === 'ArrowRight' && bestMatch) {
-                const target = e.target as HTMLInputElement;
-                if (target.selectionStart === searchQuery.length) {
-                  setSearchQuery(bestMatch);
-                }
+        <input
+          ref={inputRef}
+          type="text"
+          className="w-full pl-2.5 pr-14 py-2.5 bg-transparent border-none text-[#212529] text-base font-medium placeholder-[#6c757d] focus:outline-none z-10 leading-normal"
+          placeholder="Cari"
+          value={displayValue}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            if (!isOpen) setIsOpen(true);
+          }}
+          onFocus={() => {
+            setIsOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              if (filteredRegions.length > 0) {
+                handleSelect(filteredRegions[0]);
               }
-            }}
-          />
-        </div>
+            } else if (e.key === 'Escape') {
+              setIsOpen(false);
+              setSearchQuery('');
+            }
+          }}
+        />
 
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6c757d] pointer-events-none">
-          <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${isOpen ? 'rotate-180 text-[#0d6efd]' : ''}`} />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {selectedRegion && !isOpen && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors z-20 cursor-pointer"
+              title="Hapus Pilihan"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <ChevronDown className={`w-4 h-4 text-[#6c757d] transition-transform duration-150 pointer-events-none ${isOpen ? 'rotate-180 text-[#0d6efd]' : ''}`} />
         </div>
       </div>
  
